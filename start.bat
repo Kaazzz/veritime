@@ -10,24 +10,29 @@ echo  =========================================
 echo.
 
 REM ── Step 1: Check Python is installed ────────────────────────────────────────
+set PYTHON=python
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo  ERROR: Python was not found on this computer.
-    echo.
-    echo  Please install Python 3.9 or later from:
-    echo    https://www.python.org/downloads/
-    echo.
-    echo  When installing, make sure to tick:
-    echo    "Add Python to PATH"
-    echo.
-    pause
-    exit /b 1
+    py --version >nul 2>&1
+    if errorlevel 1 (
+        echo  ERROR: Python was not found on this computer.
+        echo.
+        echo  Please install Python 3.9 or later from:
+        echo    https://www.python.org/downloads/
+        echo.
+        echo  When installing, make sure to tick:
+        echo    "Add Python to PATH"
+        echo.
+        pause
+        exit /b 1
+    )
+    set PYTHON=py
 )
 
 REM ── Step 2: Create virtual environment if needed ─────────────────────────────
 if not exist "venv\" (
     echo  First-time setup: creating isolated Python environment...
-    python -m venv venv
+    %PYTHON% -m venv venv
     if errorlevel 1 (
         echo.
         echo  ERROR: Could not create the Python environment.
@@ -59,7 +64,7 @@ echo.
 
 REM ── Step 5: Detect Arduino COM port ──────────────────────────────────────────
 echo  Detecting Arduino...
-python configure_port.py
+%PYTHON% configure_port.py
 if errorlevel 1 (
     echo.
     echo  Veritime cannot start without the Arduino.
@@ -78,7 +83,7 @@ REM ── Step 7: Start the server ──────────────�
 echo  Veritime is running. Close this window to stop.
 echo  =========================================
 echo.
-python app.py
+%PYTHON% app.py
 
 REM ── On exit ───────────────────────────────────────────────────────────────────
 echo.
