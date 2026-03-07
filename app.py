@@ -11,7 +11,7 @@ import serial
 from database import (
     init_db, get_student_by_uid, log_scan,
     get_all_students, add_student, update_student, delete_student,
-    get_logs, get_today_summary,
+    get_logs, get_today_summary, get_latest_scan,
 )
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -36,6 +36,7 @@ def serial_reader():
         try:
             ser = serial.Serial(COM_PORT, BAUD_RATE, timeout=1)
             print(f"[Serial] Connected to {COM_PORT}")
+            socketio.emit("serial_status", {"connected": True})
             while True:
                 line = ser.readline().decode("utf-8", errors="ignore").strip()
                 if not line:
@@ -49,30 +50,39 @@ def serial_reader():
                 if first in ("CLEARDATA", "LABEL", "MSG", "ROW", "FONT"):
                     continue
 
-                # PLX-DAQ data line: DATA,Date,Time,UID,Status,...
-                if first == "DATA" and len(parts) >= 5:
-                    uid = parts[3]
-                    raw_status = parts[4]
-                # Plain CSV line: UID,Status
+                STATUS_MAP = {
+                    "ONTIME": "On Time", "ON TIME": "On Time",
+                    "LATE": "Late",
+                }
+
+                uid = None
+                status = None
+
+                if first == "DATA":
+                    # Try each plausible UID position and find the one whose
+                    # neighbour matches a known status value
+                    for i in range(1, len(parts) - 1):
+                        candidate_status = STATUS_MAP.get(parts[i + 1].upper().strip())
+                        if candidate_status and parts[i].strip():
+                            uid    = parts[i].strip()
+                            status = candidate_status
+                            break
+                    # Fallback: standard PLX-DAQ position DATA,date,time,UID,Status
+                    if uid is None and len(parts) >= 5:
+                        uid        = parts[3].strip()
+                        status     = STATUS_MAP.get(parts[4].upper().strip())
                 elif len(parts) == 2:
-                    uid = parts[0]
-                    raw_status = parts[1]
-                else:
-                    continue
+                    # Plain UID,Status
+                    uid    = parts[0]
+                    status = STATUS_MAP.get(parts[1].upper().strip())
 
                 if not uid:
                     continue
 
-                print(f"[Serial] UID={uid!r}  status={raw_status!r}")
-                status = {
-                    "OnTime": "On Time",
-                    "On Time": "On Time",
-                    "ONTIME": "On Time",
-                    "Late": "Late",
-                    "LATE": "Late",
-                }.get(raw_status)
+                print(f"[Serial] UID={uid!r}  status={status!r}")
+
                 if status is None:
-                    print(f"[Serial] Unknown status {raw_status!r} — skipping")
+                    print(f"[Serial] Could not determine status — skipping")
                     continue
 
                 with _latest_uid_lock:
@@ -92,9 +102,11 @@ def serial_reader():
                 })
         except serial.SerialException as e:
             print(f"[Serial] Error: {e}. Retrying in 5s...")
+            socketio.emit("serial_status", {"connected": False})
             time.sleep(5)
         except Exception as e:
             print(f"[Serial] Unexpected error: {e}. Retrying in 5s...")
+            socketio.emit("serial_status", {"connected": False})
             time.sleep(5)
 
 
@@ -102,7 +114,8 @@ def serial_reader():
 @app.route("/")
 def index():
     summary = get_today_summary()
-    return render_template("index.html", summary=summary, active_page="dashboard")
+    latest  = get_latest_scan()
+    return render_template("index.html", summary=summary, latest=latest, active_page="dashboard")
 
 
 @app.route("/students")

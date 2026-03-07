@@ -113,6 +113,23 @@ def get_logs(date_from="", date_to="", search=""):
         return [dict(r) for r in rows]
 
 
+def get_latest_scan():
+    with get_conn() as conn:
+        row = conn.execute("""
+            SELECT
+                sl.rfid_uid, sl.timestamp, sl.status,
+                COALESCE(s.name, 'Unknown') AS student_name,
+                COALESCE(s.grade, '')       AS grade,
+                COALESCE(s.section, '')     AS section,
+                s.photo_path
+            FROM scan_logs sl
+            LEFT JOIN students s ON sl.student_id = s.id
+            ORDER BY sl.timestamp DESC
+            LIMIT 1
+        """).fetchone()
+        return dict(row) if row else None
+
+
 def get_today_summary():
     with get_conn() as conn:
         row = conn.execute("""
