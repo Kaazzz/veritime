@@ -22,53 +22,12 @@
     </div>
   </div>
 
-  <!-- Summary cards -->
-  <div class="summary-grid">
-    <div class="summary-card" aria-label="Total scans today">
-      <div class="summary-icon summary-icon--total" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      </div>
-      <div class="summary-info">
-        <span class="summary-label">Total Scans</span>
-        <span class="summary-value" id="count-total">{{ summary.total or 0 }}</span>
-      </div>
-    </div>
+  <!-- Top grid: latest scan + summary cards -->
+  <div class="dashboard-top">
 
-    <div class="summary-card" aria-label="On time count">
-      <div class="summary-icon summary-icon--ontime" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <div class="summary-info">
-        <span class="summary-label">On Time</span>
-        <span class="summary-value summary-value--ontime" id="count-ontime">{{ summary.on_time or 0 }}</span>
-      </div>
-    </div>
-
-    <div class="summary-card" aria-label="Late count">
-      <div class="summary-icon summary-icon--late" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </div>
-      <div class="summary-info">
-        <span class="summary-label">Late</span>
-        <span class="summary-value summary-value--late" id="count-late">{{ summary.late or 0 }}</span>
-      </div>
-    </div>
-
-    <div class="summary-card" aria-label="Unknown cards count">
-      <div class="summary-icon summary-icon--unknown" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      </div>
-      <div class="summary-info">
-        <span class="summary-label">Unknown</span>
-        <span class="summary-value summary-value--unknown" id="count-unknown">{{ summary.unknown or 0 }}</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Latest scan preview -->
-  <div class="neu-card latest-card">
-    <p class="latest-eyebrow">Latest Scan</p>
-    <div class="latest-inner">
+    <!-- Latest scan (left, square) -->
+    <div class="neu-card latest-card">
+      <p class="latest-eyebrow">Latest Scan</p>
 
       <div class="latest-photo-well">
         <img id="latest-img" class="latest-photo"
@@ -87,22 +46,62 @@
           {{ latest.student_name if latest else 'No scans yet' }}
         </h2>
         <p class="latest-meta" id="latest-meta">
-          {% if latest %}
-            {{ latest.grade }}{% if latest.section %} &middot; {{ latest.section }}{% endif %}
-          {% else %}
-            Waiting for first card tap…
-          {% endif %}
+          {% if latest %}{{ latest.grade }}{% if latest.section %} &middot; {{ latest.section }}{% endif %}
+          {% else %}Waiting for first card tap…{% endif %}
         </p>
         {% if latest %}
-        {% set badge = 'badge--ontime' if latest.status == 'On Time' else ('badge--late' if latest.status == 'Late' else 'badge--unknown') %}
-        <span class="badge {{ badge }} latest-badge" id="latest-badge">{{ latest.status }}</span>
+          {% set badge = 'badge--ontime' if latest.status == 'On Time' else ('badge--late' if latest.status == 'Late' else 'badge--unknown') %}
+          <span class="badge {{ badge }} latest-badge" id="latest-badge">{{ latest.status }}</span>
         {% else %}
-        <span class="badge badge--unknown latest-badge" id="latest-badge" style="visibility:hidden">—</span>
+          <span class="badge badge--unknown latest-badge" id="latest-badge" style="visibility:hidden">—</span>
         {% endif %}
         <p class="latest-time" id="latest-time">{{ latest.timestamp if latest else '' }}</p>
       </div>
-
     </div>
+
+    <!-- Summary cards (right, 2×2) -->
+    <div class="summary-grid">
+      <div class="summary-card" aria-label="Total scans today">
+        <div class="summary-icon summary-icon--total" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="summary-info">
+          <span class="summary-label">Total Scans</span>
+          <span class="summary-value" id="count-total">{{ summary.total or 0 }}</span>
+        </div>
+      </div>
+
+      <div class="summary-card" aria-label="On time count">
+        <div class="summary-icon summary-icon--ontime" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="summary-info">
+          <span class="summary-label">On Time</span>
+          <span class="summary-value summary-value--ontime" id="count-ontime">{{ summary.on_time or 0 }}</span>
+        </div>
+      </div>
+
+      <div class="summary-card" aria-label="Late count">
+        <div class="summary-icon summary-icon--late" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="summary-info">
+          <span class="summary-label">Late</span>
+          <span class="summary-value summary-value--late" id="count-late">{{ summary.late or 0 }}</span>
+        </div>
+      </div>
+
+      <div class="summary-card" aria-label="Unknown cards count">
+        <div class="summary-icon summary-icon--unknown" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="summary-info">
+          <span class="summary-label">Unknown</span>
+          <span class="summary-value summary-value--unknown" id="count-unknown">{{ summary.unknown or 0 }}</span>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Live feed -->
