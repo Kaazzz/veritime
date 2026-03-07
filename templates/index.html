@@ -49,6 +49,9 @@
           {% if latest %}{{ latest.grade }}{% if latest.section %} &middot; {{ latest.section }}{% endif %}
           {% else %}Waiting for first card tap…{% endif %}
         </p>
+        <p class="latest-lrn" id="latest-lrn">
+          {% if latest and latest.lrn %}LRN: {{ latest.lrn }}{% endif %}
+        </p>
         {% if latest %}
           {% set badge = 'badge--ontime' if latest.status == 'On Time' else ('badge--late' if latest.status == 'Late' else 'badge--unknown') %}
           <span class="badge {{ badge }} latest-badge" id="latest-badge">{{ latest.status }}</span>
@@ -209,6 +212,8 @@
     document.getElementById('latest-name').style.color  = '';
     document.getElementById('latest-meta').textContent  =
       data.student_grade + (data.student_section ? ' · ' + data.student_section : '');
+    document.getElementById('latest-lrn').textContent   =
+      data.student_lrn ? 'LRN: ' + data.student_lrn : '';
     const badgeEl = document.getElementById('latest-badge');
     badgeEl.className   = `badge ${cls} latest-badge`;
     badgeEl.textContent = data.status;

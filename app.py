@@ -98,6 +98,7 @@ def serial_reader():
                     "student_name": student["name"] if student else "Unknown",
                     "student_grade": student["grade"] if student else "",
                     "student_section": student["section"] if student else "",
+                    "student_lrn": student["lrn"] if student else "",
                     "photo_path": student["photo_path"] if student else None,
                 })
         except serial.SerialException as e:

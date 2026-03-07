@@ -121,6 +121,7 @@ def get_latest_scan():
                 COALESCE(s.name, 'Unknown') AS student_name,
                 COALESCE(s.grade, '')       AS grade,
                 COALESCE(s.section, '')     AS section,
+                COALESCE(s.lrn, '')         AS lrn,
                 s.photo_path
             FROM scan_logs sl
             LEFT JOIN students s ON sl.student_id = s.id
