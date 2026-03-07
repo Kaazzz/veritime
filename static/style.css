@@ -207,11 +207,6 @@ h1, h2, h3 {
   font-size: 2rem; font-weight: 800; color: var(--fg);
 }
 
-/* Yellow underline accent on page titles */
-.page-title span, .page-title {
-  position: relative;
-}
-
 .page-subtitle { color: var(--muted); margin-top: 0.2rem; font-size: 0.9rem; }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -456,6 +451,9 @@ input[type="search"].neu-input { cursor: text; }
 .latest-meta  { font-size: 0.875rem; color: var(--black-soft); opacity: 0.75; }
 .latest-lrn   { font-size: 0.8rem; color: var(--black-soft); opacity: 0.6; font-family: 'Courier New', monospace; }
 .latest-badge { font-size: 0.8rem; padding: 0.3em 1.1em; }
+.latest-badge.badge--ontime  { background: var(--green); color: #fff; }
+.latest-badge.badge--late    { background: var(--red);   color: #fff; }
+.latest-badge.badge--unknown { background: rgba(0,0,0,0.15); color: var(--black-soft); }
 .latest-time  { font-size: 0.78rem; color: var(--black-soft); opacity: 0.65; font-variant-numeric: tabular-nums; }
 
 /* ══════════════════════════════════════════════════════════════════════════════
