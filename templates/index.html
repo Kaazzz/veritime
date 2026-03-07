@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Live Dashboard</h1>
+      <p class="page-subtitle">Real-time attendance feed</p>
+    </div>
+    <div class="live-indicator" id="live-indicator" title="Connecting…">
+      <span class="live-dot"></span>
+      <span class="live-label" id="live-label">Connecting</span>
+    </div>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="summary-grid">
+    <div class="summary-card" aria-label="Total scans today">
+      <div class="summary-icon summary-icon--total" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="summary-info">
+        <span class="summary-label">Total Scans</span>
+        <span class="summary-value" id="count-total">{{ summary.total or 0 }}</span>
+      </div>
+    </div>
+
+    <div class="summary-card" aria-label="On time count">
+      <div class="summary-icon summary-icon--ontime" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="summary-info">
+        <span class="summary-label">On Time</span>
+        <span class="summary-value summary-value--ontime" id="count-ontime">{{ summary.on_time or 0 }}</span>
+      </div>
+    </div>
+
+    <div class="summary-card" aria-label="Late count">
+      <div class="summary-icon summary-icon--late" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="summary-info">
+        <span class="summary-label">Late</span>
+        <span class="summary-value summary-value--late" id="count-late">{{ summary.late or 0 }}</span>
+      </div>
+    </div>
+
+    <div class="summary-card" aria-label="Unknown cards count">
+      <div class="summary-icon summary-icon--unknown" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div class="summary-info">
+        <span class="summary-label">Unknown</span>
+        <span class="summary-value summary-value--unknown" id="count-unknown">{{ summary.unknown or 0 }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live feed -->
+  <div class="neu-card feed-card">
+    <div class="feed-header">
+      <h2 class="feed-title">Recent Scans</h2>
+      <span class="feed-note" aria-live="polite" id="feed-note">Updates in real-time</span>
+    </div>
+
+    <div class="table-wrapper" role="region" aria-label="Scan feed" tabindex="0">
+      <table class="data-table" id="feed-table">
+        <thead>
+          <tr>
+            <th scope="col">Student</th>
+            <th scope="col">Grade &amp; Section</th>
+            <th scope="col">Status</th>
+            <th scope="col">Time</th>
+          </tr>
+        </thead>
+        <tbody id="feed-tbody">
+          <tr class="feed-empty-row" id="empty-row">
+            <td colspan="4">
+              <div class="empty-state">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                <p>Waiting for RFID scans…</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+  const socket = io();
+  const tbody  = document.getElementById('feed-tbody');
+  const emptyRow = document.getElementById('empty-row');
+  const liveLabel = document.getElementById('live-label');
+  const liveDot   = document.querySelector('.live-dot');
+
+  let countTotal   = parseInt(document.getElementById('count-total').textContent)   || 0;
+  let countOnTime  = parseInt(document.getElementById('count-ontime').textContent)  || 0;
+  let countLate    = parseInt(document.getElementById('count-late').textContent)    || 0;
+  let countUnknown = parseInt(document.getElementById('count-unknown').textContent) || 0;
+
+  socket.on('connect', () => {
+    liveLabel.textContent = 'Live';
+    liveDot.classList.add('live-dot--connected');
+  });
+
+  socket.on('disconnect', () => {
+    liveLabel.textContent = 'Disconnected';
+    liveDot.classList.remove('live-dot--connected');
+  });
+
+  socket.on('scan_event', (data) => {
+    // Remove empty state row
+    if (emptyRow) emptyRow.remove();
+
+    // Update counters
+    countTotal++;
+    document.getElementById('count-total').textContent = countTotal;
+    if (data.status === 'On Time') {
+      countOnTime++;
+      document.getElementById('count-ontime').textContent = countOnTime;
+    } else if (data.status === 'Late') {
+      countLate++;
+      document.getElementById('count-late').textContent = countLate;
+    }
+    if (data.student_name === 'Unknown') {
+      countUnknown++;
+      document.getElementById('count-unknown').textContent = countUnknown;
+    }
+
+    // Build new row
+    const tr = document.createElement('tr');
+    tr.classList.add('feed-row', 'feed-row--new');
+
+    const badgeClass = data.status === 'On Time' ? 'badge--ontime'
+                     : data.status === 'Late'    ? 'badge--late'
+                     : 'badge--unknown';
+
+    const photoSrc = data.photo_path
+      ? `/static/${data.photo_path}`
+      : null;
+
+    const avatarHtml = photoSrc
+      ? `<img src="${photoSrc}" alt="${escHtml(data.student_name)}" class="student-avatar" />`
+      : `<div class="student-avatar student-avatar--placeholder" aria-hidden="true">${escHtml(data.student_name.charAt(0))}</div>`;
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    tr.innerHTML = `
+      <td>
+        <div class="student-cell">
+          ${avatarHtml}
+          <div class="student-info">
+            <span class="student-name">${escHtml(data.student_name)}</span>
+            <span class="student-uid">${escHtml(data.uid)}</span>
+          </div>
+        </div>
+      </td>
+      <td>
+        <span class="grade-section">${escHtml(data.student_grade)}${data.student_section ? ' · ' + escHtml(data.student_section) : ''}</span>
+      </td>
+      <td><span class="badge ${badgeClass}">${escHtml(data.status)}</span></td>
+      <td><span class="timestamp">${timeStr}</span></td>
+    `;
+
+    tbody.prepend(tr);
+    requestAnimationFrame(() => tr.classList.remove('feed-row--new'));
+
+    // Trim to 50 rows
+    const rows = tbody.querySelectorAll('tr.feed-row');
+    if (rows.length > 50) rows[rows.length - 1].remove();
+
+    document.getElementById('feed-note').textContent = `Last scan: ${timeStr}`;
+  });
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+</script>
+{% endblock %}
