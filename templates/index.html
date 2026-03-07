@@ -242,7 +242,7 @@
           ${avatarHtml}
           <div class="student-info">
             <span class="student-name">${escHtml(data.student_name)}</span>
-            ${data.student_lrn ? `<span class="student-uid">LRN: ${escHtml(data.student_lrn)}</span>` : `<span class="student-uid">${escHtml(data.uid)}</span>`}
+            ${data.student_lrn ? `<span class="student-uid">LRN: ${escHtml(data.student_lrn)}</span>` : ''}
           </div>
         </div>
       </td>

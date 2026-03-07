@@ -112,6 +112,11 @@ def serial_reader():
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
+@app.route("/landing")
+def landing():
+    return render_template("landing.html")
+
+
 @app.route("/")
 def index():
     summary = get_today_summary()

@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Veritime — St. Catherine's College Attendance System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:            #0B0B0B;
+      --surface:       #141414;
+      --surface-2:     #1B1B1B;
+      --border:        rgba(255,255,255,0.07);
+      --border-hi:     rgba(255,255,255,0.13);
+      --yellow:        #F5C400;
+      --yellow-dim:    rgba(245,196,0,0.12);
+      --yellow-glow:   rgba(245,196,0,0.22);
+      --text:          #F0EDE6;
+      --muted:         rgba(240,237,230,0.42);
+      --green:         #10B981;
+      --red:           #EF4444;
+      --r-lg:          24px;
+      --r-md:          14px;
+      --r-sm:          10px;
+      --r-pill:        9999px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Grain overlay */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 999;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.03;
+    }
+
+    /* ─── NAV ────────────────────────────────────────── */
+    .nav {
+      position: fixed; top: 0; inset-inline: 0; z-index: 200;
+      padding: 1.1rem 2.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(11,11,11,0.82);
+      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    }
+
+    .nav-brand {
+      display: flex; align-items: center; gap: 0.7rem;
+      text-decoration: none;
+    }
+
+    .nav-logo {
+      width: 36px; height: 36px;
+      background: var(--yellow); border-radius: 9px;
+      display: grid; place-items: center;
+      font-family: 'DM Serif Display', serif;
+      font-weight: 800; font-size: 1.05rem; color: #000;
+      flex-shrink: 0;
+    }
+
+    .nav-wordmark {
+      font-family: 'DM Serif Display', serif;
+      font-weight: 800; font-size: 1.05rem;
+      color: var(--text); letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    .nav-link {
+      padding: 0.45rem 0.9rem;
+      font-size: 0.85rem; font-weight: 500; color: var(--muted);
+      text-decoration: none; border-radius: var(--r-sm);
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--text); }
+
+    .nav-cta {
+      margin-left: 0.5rem;
+      padding: 0.5rem 1.2rem;
+      font-size: 0.85rem; font-weight: 700; color: #000;
+      background: var(--yellow); border-radius: var(--r-sm);
+      text-decoration: none;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .nav-cta:hover { background: #FFD740; transform: translateY(-1px); }
+
+    /* ─── SHARED ─────────────────────────────────────── */
+    .wrap {
+      max-width: 1180px; margin: 0 auto; padding: 0 2.5rem;
+    }
+
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 0.55rem;
+      font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--yellow); margin-bottom: 1rem;
+    }
+    .eyebrow::before {
+      content: '';
+      width: 22px; height: 1.5px; background: var(--yellow); flex-shrink: 0;
+    }
+
+    .section-h {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2rem, 3.2vw, 2.6rem);
+      font-weight: 800; line-height: 1.08;
+      letter-spacing: -0.03em; color: var(--text);
+      margin-bottom: 0.9rem;
+    }
+
+    .section-p {
+      font-size: 0.975rem; color: var(--muted); line-height: 1.75;
+      max-width: 500px; margin-bottom: 3.5rem;
+    }
+
+    /* ─── HERO ───────────────────────────────────────── */
+    .hero {
+      min-height: 100svh;
+      padding-block: 130px 80px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+
+    /* Big ambient yellow glow */
+    .hero::before {
+      content: '';
+      position: absolute; top: 5vh; left: -8vw;
+      width: 55vw; height: 55vw; max-width: 700px; max-height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245,196,0,0.07) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-left { position: relative; }
+
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.35rem 0.85rem;
+      border: 1px solid rgba(245,196,0,0.3);
+      border-radius: var(--r-pill);
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--yellow);
+      margin-bottom: 1.75rem;
+      opacity: 0; animation: fadeUp 0.55s ease-out 0.05s forwards;
+    }
+
+    .hero-tag-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--yellow);
+      animation: blink 1.8s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+    .hero-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(3.2rem, 5.5vw, 5rem);
+      font-weight: 800; line-height: 1.0;
+      letter-spacing: -0.04em; color: var(--text);
+      margin-bottom: 1.5rem;
+      opacity: 0; animation: fadeUp 0.55s ease-out 0.15s forwards;
+    }
+
+    .hero-title em {
+      font-style: normal; color: var(--yellow);
+      position: relative; display: inline-block;
+    }
+
+    /* Underline draws in after a delay */
+    .hero-title em::after {
+      content: '';
+      position: absolute; bottom: 2px; left: 0; right: 0;
+      height: 4px; background: var(--yellow); border-radius: 2px;
+      transform: scaleX(0); transform-origin: left;
+      animation: drawLine 0.45s cubic-bezier(0.4,0,0.2,1) 0.9s forwards;
+    }
+    @keyframes drawLine { to { transform: scaleX(1); } }
+
+    .hero-desc {
+      font-size: 1.05rem; color: var(--muted); line-height: 1.75;
+      max-width: 440px; margin-bottom: 2.5rem;
+      opacity: 0; animation: fadeUp 0.55s ease-out 0.28s forwards;
+    }
+
+    .hero-actions {
+      display: flex; gap: 0.9rem; flex-wrap: wrap; align-items: center;
+      opacity: 0; animation: fadeUp 0.55s ease-out 0.38s forwards;
+    }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.875rem 1.8rem;
+      background: var(--yellow); color: #000;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700; font-size: 0.95rem;
+      border-radius: var(--r-md); text-decoration: none;
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      background: #FFD740; transform: translateY(-2px);
+      box-shadow: 0 12px 40px var(--yellow-glow);
+    }
+
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.875rem 1.5rem;
+      color: var(--muted); font-weight: 500; font-size: 0.95rem;
+      text-decoration: none; border-radius: var(--r-md);
+      border: 1px solid var(--border-hi);
+      transition: color 0.2s, border-color 0.2s, transform 0.2s;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.28); transform: translateY(-2px); }
+
+    /* ─── MOCK DASHBOARD ─────────────────────────────── */
+    .hero-right {
+      opacity: 0; animation: slideRight 0.65s ease-out 0.45s forwards;
+      position: relative;
+    }
+
+    @keyframes slideRight {
+      from { opacity: 0; transform: translateX(28px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Glow behind the mock */
+    .hero-right::after {
+      content: '';
+      position: absolute; bottom: -60px; right: -40px; z-index: -1;
+      width: 320px; height: 320px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(245,196,0,0.1) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .mock {
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04),
+        0 24px 64px rgba(0,0,0,0.65),
+        0 4px 16px rgba(0,0,0,0.4);
+    }
+
+    .mock-bar {
+      padding: 0.8rem 1.2rem;
+      display: flex; align-items: center; gap: 0.45rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #FF5F56; }
+    .dot-y { background: #FFBD2E; }
+    .dot-g { background: #27C93F; }
+
+    .mock-url {
+      margin-left: auto;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem; color: var(--muted);
+      background: var(--surface-2);
+      padding: 0.2rem 0.7rem; border-radius: var(--r-pill);
+      border: 1px solid var(--border);
+    }
+
+    .mock-body { padding: 1.1rem; display: flex; flex-direction: column; gap: 0.85rem; }
+
+    /* Yellow latest-scan card */
+    .mock-scan {
+      background: var(--yellow);
+      border-radius: var(--r-md);
+      padding: 0.9rem 1.1rem;
+      display: flex; align-items: center; gap: 0.9rem;
+    }
+
+    .mock-scan-av {
+      width: 42px; height: 42px; border-radius: 9px;
+      background: #000;
+      display: grid; place-items: center;
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.15rem; font-weight: 800; color: var(--yellow);
+      flex-shrink: 0;
+    }
+
+    .mock-scan-info { flex: 1; min-width: 0; }
+    .mock-scan-name { font-weight: 700; color: #000; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mock-scan-sub  { font-size: 0.68rem; color: rgba(0,0,0,0.5); margin-top: 0.15rem; }
+
+    .mock-chip {
+      padding: 0.22em 0.7em;
+      border-radius: var(--r-pill);
+      font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .mock-chip--ok   { background: rgba(16,185,129,0.2);  color: #10B981; }
+    .mock-chip--late { background: rgba(239,68,68,0.2);   color: #EF4444; }
+
+    /* Feed rows */
+    .mock-feed { display: flex; flex-direction: column; gap: 0.45rem; }
+
+    .mock-row {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 0.55rem 0.85rem;
+      display: flex; align-items: center; gap: 0.65rem;
+      opacity: 0;
+    }
+
+    .mock-row:nth-child(1) { animation: rowSlide 0.35s ease-out 1.1s forwards; }
+    .mock-row:nth-child(2) { animation: rowSlide 0.35s ease-out 1.5s forwards; }
+    .mock-row:nth-child(3) { animation: rowSlide 0.35s ease-out 1.9s forwards; }
+    .mock-row:nth-child(4) { animation: rowSlide 0.35s ease-out 2.3s forwards; }
+
+    @keyframes rowSlide {
+      from { opacity: 0; transform: translateY(-5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .mock-row-av {
+      width: 26px; height: 26px; border-radius: 6px;
+      background: var(--yellow-dim);
+      display: grid; place-items: center;
+      font-size: 0.62rem; font-weight: 700; color: var(--yellow);
+      flex-shrink: 0;
+    }
+
+    .mock-row-name  { font-size: 0.75rem; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mock-row-grade { font-size: 0.65rem; color: var(--muted); flex-shrink: 0; }
+    .mock-row-time  { font-size: 0.62rem; color: var(--muted); font-family: 'DM Mono', monospace; flex-shrink: 0; }
+
+    /* ─── STATS BAR ──────────────────────────────────── */
+    .stats-bar {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .stats-inner {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+    }
+
+    .stat {
+      padding: 3.5rem 2rem;
+      text-align: center;
+      border-right: 1px solid var(--border);
+      position: relative;
+    }
+    .stat:last-child { border-right: none; }
+
+    /* Yellow line on top of stat on hover */
+    .stat::after {
+      content: '';
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 0; height: 2px; background: var(--yellow);
+      transition: width 0.35s ease;
+    }
+    .stat:hover::after { width: 60%; }
+
+    .stat-n {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.8rem, 4.5vw, 4rem);
+      font-weight: 800; color: var(--yellow);
+      line-height: 1; letter-spacing: -0.04em;
+      display: block; margin-bottom: 0.6rem;
+    }
+
+    .stat-l {
+      font-size: 0.78rem; font-weight: 500;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em;
+    }
+
+    /* ─── FEATURES ───────────────────────────────────── */
+    .features {
+      padding: 9rem 0;
+    }
+
+    .features-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      background: var(--border);
+      gap: 1px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+
+    .feat {
+      background: var(--surface);
+      padding: 2.75rem;
+      position: relative; overflow: hidden;
+      transition: background 0.3s;
+    }
+    .feat:hover { background: var(--surface-2); }
+
+    /* Radial glow on hover */
+    .feat::before {
+      content: '';
+      position: absolute; top: -70px; left: -70px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: radial-gradient(circle, var(--yellow-dim) 0%, transparent 70%);
+      opacity: 0; transition: opacity 0.4s;
+      pointer-events: none;
+    }
+    .feat:hover::before { opacity: 1; }
+
+    .feat-icon {
+      width: 50px; height: 50px; border-radius: var(--r-sm);
+      background: var(--yellow-dim);
+      border: 1px solid rgba(245,196,0,0.18);
+      display: grid; place-items: center;
+      color: var(--yellow); margin-bottom: 1.5rem;
+    }
+
+    .feat-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--text); margin-bottom: 0.55rem;
+      letter-spacing: -0.01em;
+    }
+
+    .feat-desc {
+      font-size: 0.875rem; color: var(--muted); line-height: 1.7;
+    }
+
+    /* ─── HOW IT WORKS ───────────────────────────────── */
+    .how {
+      padding: 9rem 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .steps {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      margin-top: 3.5rem;
+    }
+
+    .step {
+      background: var(--surface);
+      padding: 2.5rem;
+      position: relative;
+      transition: background 0.3s;
+    }
+    .step:hover { background: var(--surface-2); }
+
+    .step-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 3.5rem; font-weight: 800;
+      color: rgba(245,196,0,0.15);
+      line-height: 1; margin-bottom: 1.5rem;
+      letter-spacing: -0.04em;
+      transition: color 0.3s;
+    }
+    .step:hover .step-num { color: rgba(245,196,0,0.3); }
+
+    .step-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.05rem; font-weight: 700;
+      color: var(--text); margin-bottom: 0.6rem;
+    }
+
+    .step-desc {
+      font-size: 0.875rem; color: var(--muted); line-height: 1.7;
+    }
+
+    /* Yellow top bar per step */
+    .step::after {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px; background: var(--yellow);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+    .step:hover::after { transform: scaleX(1); }
+
+    /* ─── CTA BLOCK ──────────────────────────────────── */
+    .cta {
+      padding: 9rem 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .cta-box {
+      background: var(--yellow);
+      border-radius: var(--r-lg);
+      padding: 5.5rem 4rem;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+
+    /* Watermark text */
+    .cta-box::before {
+      content: 'VERITIME';
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(5rem, 12vw, 9rem);
+      font-weight: 800; letter-spacing: -0.05em;
+      color: rgba(0,0,0,0.055);
+      white-space: nowrap; pointer-events: none; user-select: none;
+    }
+
+    .cta-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2rem, 4vw, 2.9rem);
+      font-weight: 800; color: #000;
+      letter-spacing: -0.03em; line-height: 1.1;
+      margin-bottom: 0.85rem; position: relative;
+    }
+
+    .cta-sub {
+      font-size: 1rem; color: rgba(0,0,0,0.55);
+      margin-bottom: 2.5rem; position: relative;
+    }
+
+    .cta-btns {
+      display: flex; gap: 0.9rem;
+      justify-content: center; flex-wrap: wrap;
+      position: relative;
+    }
+
+    .btn-dark {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.9rem 2rem;
+      background: #000; color: var(--yellow);
+      font-weight: 700; font-size: 0.95rem;
+      border-radius: var(--r-md); text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-dark:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(0,0,0,0.35); }
+
+    .btn-outline {
+      display: inline-flex; align-items: center;
+      padding: 0.9rem 1.75rem;
+      color: rgba(0,0,0,0.6); font-weight: 600; font-size: 0.95rem;
+      border-radius: var(--r-md); text-decoration: none;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      transition: color 0.2s, border-color 0.2s, transform 0.2s;
+    }
+    .btn-outline:hover { color: #000; border-color: rgba(0,0,0,0.5); transform: translateY(-2px); }
+
+    /* ─── FOOTER ─────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 2.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+      max-width: 1180px; margin: 0 auto;
+    }
+
+    .footer-brand {
+      font-family: 'DM Serif Display', serif;
+      font-weight: 800; font-size: 0.95rem;
+      color: var(--muted); text-decoration: none;
+      letter-spacing: -0.01em;
+    }
+
+    .footer-links { display: flex; gap: 1.5rem; }
+    .footer-links a {
+      font-size: 0.8rem; color: var(--muted); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--text); }
+
+    /* ─── ANIMATIONS ─────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0; transform: translateY(22px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    .reveal.in { opacity: 1; transform: translateY(0); }
+
+    /* ─── RESPONSIVE ─────────────────────────────────── */
+    @media (max-width: 960px) {
+      .hero { grid-template-columns: 1fr; gap: 3rem; padding-block: 120px 60px; }
+      .hero-right { order: -1; }
+      .stats-inner { grid-template-columns: 1fr; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); padding: 2.5rem 2rem; }
+      .stat:last-child { border-bottom: none; }
+      .features-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+      .cta-box { padding: 3.5rem 1.75rem; }
+    }
+
+    @media (max-width: 640px) {
+      .nav { padding: 1rem 1.25rem; }
+      .nav-link { display: none; }
+      .wrap { padding: 0 1.25rem; }
+      .hero { padding-inline: 1.25rem; }
+      .section-p { margin-bottom: 2.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══════════════════════════════════════════════════ -->
+<nav class="nav">
+  <a href="/landing" class="nav-brand">
+    <div class="nav-logo">V</div>
+    <span class="nav-wordmark">Veritime</span>
+  </a>
+  <div class="nav-links">
+    <a href="/students" class="nav-link">Students</a>
+    <a href="/logs" class="nav-link">Logs</a>
+    <a href="/" class="nav-cta">Open Dashboard →</a>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══════════════════════════════════════════════════ -->
+<div class="wrap" style="position:relative">
+  <div class="hero">
+
+    <div class="hero-left">
+      <div class="hero-tag">
+        <span class="hero-tag-dot"></span>
+        St. Catherine's College — Attendance System
+      </div>
+      <h1 class="hero-title">
+        Keeping every<br>
+        <em>Catherinean</em><br>
+        accounted for.
+      </h1>
+      <p class="hero-desc">
+        Veritime is the official RFID-based attendance system of St. Catherine's College — built to protect student safety, support campus wellness, and give administrators real-time visibility over every arrival.
+      </p>
+      <div class="hero-actions">
+        <a href="/" class="btn-primary">
+          Open Dashboard
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <a href="/students" class="btn-ghost">Manage Students</a>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="mock">
+        <div class="mock-bar">
+          <span class="dot dot-r"></span>
+          <span class="dot dot-y"></span>
+          <span class="dot dot-g"></span>
+          <span class="mock-url">localhost:5000</span>
+        </div>
+        <div class="mock-body">
+
+          <!-- Latest scan card -->
+          <div class="mock-scan">
+            <div class="mock-scan-av">R</div>
+            <div class="mock-scan-info">
+              <div class="mock-scan-name">Reyes, Maria C.</div>
+              <div class="mock-scan-sub">Grade 8 · Sampaguita &nbsp;·&nbsp; LRN 123456789012</div>
+            </div>
+            <span class="mock-chip mock-chip--ok">On Time</span>
+          </div>
+
+          <!-- Live feed rows -->
+          <div class="mock-feed">
+            <div class="mock-row">
+              <div class="mock-row-av">S</div>
+              <span class="mock-row-name">Santos, Juan D.</span>
+              <span class="mock-row-grade">Gr. 7 · Mabini</span>
+              <span class="mock-chip mock-chip--ok" style="font-size:0.58rem">On Time</span>
+              <span class="mock-row-time">07:58</span>
+            </div>
+            <div class="mock-row">
+              <div class="mock-row-av">C</div>
+              <span class="mock-row-name">Cruz, Ana L.</span>
+              <span class="mock-row-grade">Gr. 9 · Rizal</span>
+              <span class="mock-chip mock-chip--late" style="font-size:0.58rem">Late</span>
+              <span class="mock-row-time">08:17</span>
+            </div>
+            <div class="mock-row">
+              <div class="mock-row-av">B</div>
+              <span class="mock-row-name">Bautista, Lino M.</span>
+              <span class="mock-row-grade">Gr. 8 · Sampaguita</span>
+              <span class="mock-chip mock-chip--ok" style="font-size:0.58rem">On Time</span>
+              <span class="mock-row-time">07:55</span>
+            </div>
+            <div class="mock-row">
+              <div class="mock-row-av">G</div>
+              <span class="mock-row-name">Garcia, Rosa P.</span>
+              <span class="mock-row-grade">Gr. 10 · Bonifacio</span>
+              <span class="mock-chip mock-chip--ok" style="font-size:0.58rem">On Time</span>
+              <span class="mock-row-time">07:52</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ STATS ══════════════════════════════════════════════════ -->
+<div class="stats-bar">
+  <div class="stats-inner wrap">
+    <div class="stat reveal">
+      <span class="stat-n">&lt;1s</span>
+      <span class="stat-l">Scan to dashboard</span>
+    </div>
+    <div class="stat reveal" style="transition-delay:.1s">
+      <span class="stat-n">100%</span>
+      <span class="stat-l">On-campus, offline-capable</span>
+    </div>
+    <div class="stat reveal" style="transition-delay:.2s">
+      <span class="stat-n">Safe</span>
+      <span class="stat-l">Student welfare first</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FEATURES ═══════════════════════════════════════════════ -->
+<section class="features">
+  <div class="wrap">
+    <div class="eyebrow reveal">Built for St. Catherine's College</div>
+    <h2 class="section-h reveal" style="transition-delay:.08s">Security and wellness,<br>side by side.</h2>
+    <p class="section-p reveal" style="transition-delay:.14s">Veritime was designed with the Catherinean community in mind — giving faculty and staff the tools to ensure every student is safe, present, and accounted for.</p>
+
+    <div class="features-grid reveal" style="transition-delay:.18s">
+      <div class="feat">
+        <div class="feat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3 class="feat-title">Campus Security</h3>
+        <p class="feat-desc">Know exactly who has entered the campus in real time. Every card tap is logged with a timestamp, giving faculty an instant, accurate record of student arrivals.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <h3 class="feat-title">Student Wellness Monitoring</h3>
+        <p class="feat-desc">Attendance patterns reveal a lot. Late arrivals and absences are tracked automatically, helping guidance staff identify students who may need support.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <h3 class="feat-title">Live Dashboard</h3>
+        <p class="feat-desc">The moment a Catherinean taps their card, it appears on screen. Faculty see the student's name, photo, grade, section, and status — instantly, no refresh needed.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <h3 class="feat-title">Records & Reporting</h3>
+        <p class="feat-desc">Filter attendance history by date, grade level, or section. Export any view as a clean CSV — ready for DepEd reporting, parent communication, or school records.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ═══════════════════════════════════════════ -->
+<section class="how">
+  <div class="wrap">
+    <div class="eyebrow reveal">How It Works</div>
+    <h2 class="section-h reveal" style="transition-delay:.08s">Simple for staff.<br>Seamless for students.</h2>
+    <div class="steps reveal" style="transition-delay:.16s">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3 class="step-title">Enroll Catherineans</h3>
+        <p class="step-desc">Register each student with their full name, LRN, grade, section, and photo. Assign their RFID card by simply tapping it — no manual UID entry needed.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3 class="step-title">Set up the reader</h3>
+        <p class="step-desc">Connect the Arduino RFID reader to the school's computer via USB. Veritime automatically detects it and starts listening — ready within seconds.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3 class="step-title">Monitor arrivals live</h3>
+        <p class="step-desc">As students enter and tap their cards, the dashboard updates instantly — showing who arrived, when, and whether they were on time or late.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA ════════════════════════════════════════════════════ -->
+<section class="cta">
+  <div class="wrap">
+    <div class="cta-box reveal">
+      <h2 class="cta-title">Every Catherinean,<br>safe and present.</h2>
+      <p class="cta-sub">The dashboard is live. Open it and start monitoring arrivals right now.</p>
+      <div class="cta-btns">
+        <a href="/" class="btn-dark">
+          Open Dashboard
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <a href="/students" class="btn-outline">Manage Students</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer">
+    <a href="/landing" class="footer-brand">Veritime</a>
+    <div class="footer-links">
+      <a href="/">Dashboard</a>
+      <a href="/students">Students</a>
+      <a href="/logs">Logs</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
