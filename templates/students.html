@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% block title %}Students{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Students</h1>
+      <p class="page-subtitle">{{ students|length }} registered student{{ 's' if students|length != 1 }}</p>
+    </div>
+    <button class="neu-btn neu-btn--primary" id="open-add-modal" aria-haspopup="dialog">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Student
+    </button>
+  </div>
+
+  <!-- Students table -->
+  <div class="neu-card">
+    {% if students %}
+    <div class="table-wrapper" role="region" aria-label="Students list" tabindex="0">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Student</th>
+            <th scope="col">LRN</th>
+            <th scope="col">Grade</th>
+            <th scope="col">Section</th>
+            <th scope="col">RFID UID</th>
+            <th scope="col" style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          <tr>
+            <td>
+              <div class="student-cell">
+                {% if s.photo_path %}
+                  <img src="/static/{{ s.photo_path }}" alt="{{ s.name }}" class="student-avatar" />
+                {% else %}
+                  <div class="student-avatar student-avatar--placeholder" aria-hidden="true">{{ s.name[0] }}</div>
+                {% endif %}
+                <span class="student-name">{{ s.name }}</span>
+              </div>
+            </td>
+            <td><span class="mono-text">{{ s.lrn or '—' }}</span></td>
+            <td>{{ s.grade or '—' }}</td>
+            <td>{{ s.section or '—' }}</td>
+            <td><span class="mono-text uid-text">{{ s.rfid_uid }}</span></td>
+            <td>
+              <div class="action-btns">
+                <button
+                  class="neu-btn neu-btn--sm neu-btn--secondary edit-btn"
+                  data-student="{{ s|tojson|e }}"
+                  aria-label="Edit {{ s.name }}"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Edit
+                </button>
+                <form method="post" action="/students/delete/{{ s.id }}" onsubmit="return confirm('Delete {{ s.name }}?')" style="display:inline">
+                  <button type="submit" class="neu-btn neu-btn--sm neu-btn--danger" aria-label="Delete {{ s.name }}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    Delete
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state empty-state--page">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <p>No students yet. Add one to get started.</p>
+      <button class="neu-btn neu-btn--primary" onclick="openAddModal()">Add your first student</button>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- ── Modal ─────────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal neu-card" id="student-modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-title">Add Student</h2>
+      <button class="modal-close" id="modal-close" aria-label="Close modal">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <form method="post" action="/students/add" enctype="multipart/form-data" id="student-form" novalidate>
+
+      <div class="form-grid">
+        <!-- Last Name -->
+        <div class="form-field">
+          <label class="form-label" for="field-lastname">Last Name <span aria-hidden="true">*</span></label>
+          <input class="neu-input" type="text" id="field-lastname" name="last_name" required placeholder="e.g. Dela Cruz" autocomplete="off" />
+        </div>
+
+        <!-- First Name -->
+        <div class="form-field">
+          <label class="form-label" for="field-firstname">First Name <span aria-hidden="true">*</span></label>
+          <input class="neu-input" type="text" id="field-firstname" name="first_name" required placeholder="e.g. Juan" autocomplete="off" />
+        </div>
+
+        <!-- Middle Initial -->
+        <div class="form-field">
+          <label class="form-label" for="field-mi">Middle Initial</label>
+          <input class="neu-input" type="text" id="field-mi" name="middle_initial" placeholder="e.g. B" maxlength="2" autocomplete="off" />
+        </div>
+
+        <!-- LRN -->
+        <div class="form-field">
+          <label class="form-label" for="field-lrn">LRN</label>
+          <input class="neu-input" type="text" id="field-lrn" name="lrn" placeholder="Learner Reference No." autocomplete="off" />
+        </div>
+
+        <!-- Grade -->
+        <div class="form-field">
+          <label class="form-label" for="field-grade">Grade</label>
+          <input class="neu-input" type="text" id="field-grade" name="grade" placeholder="e.g. Grade 7" autocomplete="off" />
+        </div>
+
+        <!-- Section -->
+        <div class="form-field">
+          <label class="form-label" for="field-section">Section</label>
+          <input class="neu-input" type="text" id="field-section" name="section" placeholder="e.g. Mabini" autocomplete="off" />
+        </div>
+
+        <!-- RFID UID -->
+        <div class="form-field">
+          <label class="form-label" for="field-rfid">RFID UID <span aria-hidden="true">*</span></label>
+          <div class="uid-field-wrapper">
+            <input class="neu-input" type="text" id="field-rfid" name="rfid_uid" required placeholder="Tap card or enter UID" autocomplete="off" />
+            <button type="button" class="neu-btn neu-btn--sm neu-btn--secondary capture-btn" id="capture-btn" title="Tap a card to auto-fill">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5a7 7 0 1 0 11 0"/><line x1="12" y1="2" x2="12" y2="13"/></svg>
+              Capture
+            </button>
+          </div>
+          <span class="form-hint" id="capture-status" aria-live="polite"></span>
+        </div>
+
+        <!-- Photo -->
+        <div class="form-field form-field--full">
+          <label class="form-label" for="field-photo">Photo</label>
+          <div class="photo-upload-area">
+            <div class="photo-preview-wrapper">
+              <div class="photo-preview" id="photo-preview">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+            </div>
+            <div class="photo-upload-controls">
+              <label class="neu-btn neu-btn--sm neu-btn--secondary" for="field-photo" style="cursor:pointer">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Choose Photo
+              </label>
+              <input type="file" id="field-photo" name="photo" accept="image/*" class="sr-only" />
+              <span class="form-hint" id="photo-filename">No file chosen</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="neu-btn neu-btn--secondary" id="modal-cancel">Cancel</button>
+        <button type="submit" class="neu-btn neu-btn--primary">Save Student</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ── Modal open/close ──────────────────────────────────────────────────────
+  const overlay    = document.getElementById('modal-overlay');
+  const form       = document.getElementById('student-form');
+  const modalTitle = document.getElementById('modal-title');
+  const uidInput   = document.getElementById('field-rfid');
+
+  function openAddModal() {
+    modalTitle.textContent = 'Add Student';
+    form.action = '/students/add';
+    form.reset();
+    resetPhotoPreview();
+    overlay.removeAttribute('hidden');
+    document.getElementById('field-lastname').focus();
+    stopCapture();
+  }
+
+  function splitName(full) {
+    // Expects "Lastname, Firstname M."
+    let lastName = '', firstName = '', middleInitial = '';
+    const commaIdx = full.indexOf(', ');
+    if (commaIdx !== -1) {
+      lastName = full.substring(0, commaIdx);
+      const rest = full.substring(commaIdx + 2).trim();
+      const lastSpace = rest.lastIndexOf(' ');
+      if (lastSpace !== -1) {
+        const possibleMI = rest.substring(lastSpace + 1);
+        if (/^[A-Za-z]\.?$/.test(possibleMI)) {
+          firstName = rest.substring(0, lastSpace);
+          middleInitial = possibleMI.replace('.', '');
+        } else {
+          firstName = rest;
+        }
+      } else {
+        firstName = rest;
+      }
+    } else {
+      firstName = full;
+    }
+    return { lastName, firstName, middleInitial };
+  }
+
+  function openEditModal(student) {
+    modalTitle.textContent = 'Edit Student';
+    form.action = `/students/edit/${student.id}`;
+    const { lastName, firstName, middleInitial } = splitName(student.name || '');
+    document.getElementById('field-lastname').value  = lastName;
+    document.getElementById('field-firstname').value = firstName;
+    document.getElementById('field-mi').value        = middleInitial;
+    document.getElementById('field-lrn').value       = student.lrn     || '';
+    document.getElementById('field-grade').value     = student.grade   || '';
+    document.getElementById('field-section').value   = student.section || '';
+    uidInput.value = student.rfid_uid || '';
+    resetPhotoPreview(student.photo_path ? `/static/${student.photo_path}` : null);
+    overlay.removeAttribute('hidden');
+    document.getElementById('field-lastname').focus();
+    stopCapture();
+  }
+
+  function closeModal() {
+    overlay.setAttribute('hidden', '');
+    stopCapture();
+  }
+
+  document.getElementById('open-add-modal').addEventListener('click', openAddModal);
+
+  document.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const student = JSON.parse(btn.dataset.student);
+      openEditModal(student);
+    });
+  });
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+  // ── Photo preview ─────────────────────────────────────────────────────────
+  function resetPhotoPreview(src) {
+    const preview = document.getElementById('photo-preview');
+    if (src) {
+      preview.innerHTML = `<img src="${src}" alt="Preview" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" />`;
+    } else {
+      preview.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+    }
+    document.getElementById('photo-filename').textContent = 'No file chosen';
+  }
+
+  document.getElementById('field-photo').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    document.getElementById('photo-filename').textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      document.getElementById('photo-preview').innerHTML =
+        `<img src="${ev.target.result}" alt="Preview" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" />`;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ── Capture UID ───────────────────────────────────────────────────────────
+  let captureInterval = null;
+  let lastKnownUid = null;
+
+  function stopCapture() {
+    clearInterval(captureInterval);
+    captureInterval = null;
+    document.getElementById('capture-status').textContent = '';
+    document.getElementById('capture-btn').textContent = '';
+    document.getElementById('capture-btn').innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5a7 7 0 1 0 11 0"/><line x1="12" y1="2" x2="12" y2="13"/></svg> Capture`;
+  }
+
+  document.getElementById('capture-btn').addEventListener('click', () => {
+    if (captureInterval) { stopCapture(); return; }
+    document.getElementById('capture-status').textContent = 'Tap a card now…';
+    document.getElementById('capture-btn').innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg> Stop`;
+
+    // Establish baseline first, then start polling
+    fetch('/api/latest-uid')
+      .then(r => r.json())
+      .then(d => {
+        lastKnownUid = d.uid;
+        captureInterval = setInterval(() => {
+          fetch('/api/latest-uid')
+            .then(r => r.json())
+            .then(d => {
+              if (d.uid && d.uid !== lastKnownUid) {
+                uidInput.value = d.uid;
+                document.getElementById('capture-status').textContent = `Captured: ${d.uid}`;
+                stopCapture();
+              }
+            })
+            .catch(() => {});
+        }, 500);
+      })
+      .catch(() => {
+        document.getElementById('capture-status').textContent = 'Error connecting to server.';
+        stopCapture();
+      });
+  });
+</script>
+{% endblock %}
