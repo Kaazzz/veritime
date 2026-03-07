@@ -49,9 +49,23 @@ def log_scan(uid, student_id, status):
         conn.commit()
 
 
-def get_all_students():
+def get_all_grades():
     with get_conn() as conn:
-        rows = conn.execute("SELECT * FROM students ORDER BY name").fetchall()
+        rows = conn.execute(
+            "SELECT DISTINCT grade FROM students WHERE grade IS NOT NULL AND grade != '' ORDER BY grade"
+        ).fetchall()
+        return [r["grade"] for r in rows]
+
+
+def get_all_students(grade=""):
+    query = "SELECT * FROM students"
+    params = []
+    if grade:
+        query += " WHERE grade = ?"
+        params.append(grade)
+    query += " ORDER BY name"
+    with get_conn() as conn:
+        rows = conn.execute(query, params).fetchall()
         return [dict(r) for r in rows]
 
 

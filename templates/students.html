@@ -8,13 +8,25 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Students</h1>
-      <p class="page-subtitle">{{ students|length }} registered student{{ 's' if students|length != 1 }}</p>
+      <p class="page-subtitle">
+        {{ students|length }} student{{ 's' if students|length != 1 }}{% if selected_grade %} in {{ selected_grade }}{% endif %}
+      </p>
     </div>
     <button class="neu-btn neu-btn--primary" id="open-add-modal" aria-haspopup="dialog">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Add Student
     </button>
   </div>
+
+  <!-- Grade filter -->
+  {% if all_grades %}
+  <div class="grade-filter-bar">
+    <a href="/students" class="grade-pill {% if not selected_grade %}grade-pill--active{% endif %}">All</a>
+    {% for g in all_grades %}
+    <a href="/students?grade={{ g|urlencode }}" class="grade-pill {% if selected_grade == g %}grade-pill--active{% endif %}">{{ g }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
 
   <!-- Students table -->
   <div class="neu-card">

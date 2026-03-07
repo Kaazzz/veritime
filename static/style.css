@@ -684,6 +684,42 @@ input[type="search"].neu-input { cursor: text; }
 .photo-upload-controls { display: flex; flex-direction: column; gap: 0.5rem; }
 
 /* ══════════════════════════════════════════════════════════════════════════════
+   GRADE FILTER BAR
+══════════════════════════════════════════════════════════════════════════════ */
+.grade-filter-bar {
+  display: flex; flex-wrap: wrap; gap: 0.5rem;
+}
+
+.grade-pill {
+  display: inline-flex; align-items: center;
+  padding: 0.45rem 1.1rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem; font-weight: 600;
+  text-decoration: none; color: var(--muted);
+  box-shadow: var(--shadow-raised-sm);
+  transition: box-shadow 0.25s, transform 0.2s, color 0.2s;
+}
+
+.grade-pill:hover {
+  box-shadow: var(--shadow-raised);
+  color: var(--fg);
+  transform: translateY(-1px);
+}
+
+.grade-pill--active {
+  background: var(--yellow);
+  color: var(--black);
+  box-shadow: var(--shadow-inset-sm);
+  font-weight: 700;
+}
+
+.grade-pill--active:hover {
+  transform: none;
+  box-shadow: var(--shadow-inset-sm);
+  color: var(--black);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
    FILTER CARD
 ══════════════════════════════════════════════════════════════════════════════ */
 .filter-card { padding: 1.5rem 2rem; }

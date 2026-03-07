@@ -10,7 +10,7 @@ import serial
 
 from database import (
     init_db, get_student_by_uid, log_scan,
-    get_all_students, add_student, update_student, delete_student,
+    get_all_students, get_all_grades, add_student, update_student, delete_student,
     get_logs, get_today_summary, get_latest_scan,
 )
 
@@ -121,8 +121,11 @@ def index():
 
 @app.route("/students")
 def students():
-    all_students = get_all_students()
-    return render_template("students.html", students=all_students, active_page="students")
+    grade = request.args.get("grade", "")
+    all_students = get_all_students(grade)
+    all_grades = get_all_grades()
+    return render_template("students.html", students=all_students, all_grades=all_grades,
+                           selected_grade=grade, active_page="students")
 
 
 def build_full_name():
