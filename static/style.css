@@ -398,28 +398,31 @@ input[type="search"].neu-input { cursor: text; }
   align-items: center; justify-content: center;
   gap: 1.25rem; text-align: center;
   position: relative; overflow: hidden;
+  /* Yellow card */
+  background: var(--yellow) !important;
+  box-shadow: 9px 9px 16px rgba(180,145,0,0.45), -9px -9px 16px rgba(255,235,100,0.55) !important;
 }
 
-/* Subtle yellow glow in the top-right corner */
+/* Decorative corner highlight */
 .latest-card::after {
   content: '';
   position: absolute; top: -40px; right: -40px;
-  width: 140px; height: 140px;
+  width: 160px; height: 160px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(245,196,0,0.18) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255,255,255,0.28) 0%, transparent 70%);
   pointer-events: none;
 }
 
 .latest-eyebrow {
   font-size: 0.72rem; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--yellow-dark); align-self: flex-start;
+  color: var(--black-soft); opacity: 0.75; align-self: flex-start;
 }
 
 .latest-photo-well {
   width: 140px; height: 140px;
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-inset-deep);
+  box-shadow: inset 5px 5px 10px rgba(180,145,0,0.35), inset -5px -5px 10px rgba(255,235,100,0.5);
   display: grid; place-items: center;
   overflow: hidden; flex-shrink: 0;
 }
@@ -429,7 +432,7 @@ input[type="search"].neu-input { cursor: text; }
   object-fit: cover; border-radius: var(--radius-xl);
 }
 
-/* Black avatar with yellow initial */
+/* Black avatar on yellow card */
 .latest-avatar {
   width: 100%; height: 100%; display: grid; place-items: center;
   background: var(--black);
@@ -440,8 +443,8 @@ input[type="search"].neu-input { cursor: text; }
 }
 
 .latest-avatar--empty {
-  background: linear-gradient(135deg, #c8cdd6, #b0b8c4);
-  color: rgba(255,255,255,0.45);
+  background: rgba(0,0,0,0.18);
+  color: rgba(0,0,0,0.3);
 }
 
 .latest-info {
@@ -449,10 +452,11 @@ input[type="search"].neu-input { cursor: text; }
   align-items: center; gap: 0.4rem;
 }
 
-.latest-name  { font-size: 1.35rem; font-weight: 800; color: var(--fg); line-height: 1.15; }
-.latest-meta  { font-size: 0.875rem; color: var(--muted); }
+.latest-name  { font-size: 1.35rem; font-weight: 800; color: var(--black); line-height: 1.15; }
+.latest-meta  { font-size: 0.875rem; color: var(--black-soft); opacity: 0.75; }
+.latest-lrn   { font-size: 0.8rem; color: var(--black-soft); opacity: 0.6; font-family: 'Courier New', monospace; }
 .latest-badge { font-size: 0.8rem; padding: 0.3em 1.1em; }
-.latest-time  { font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.latest-time  { font-size: 0.78rem; color: var(--black-soft); opacity: 0.65; font-variant-numeric: tabular-nums; }
 
 /* ══════════════════════════════════════════════════════════════════════════════
    STATUS PILLS
