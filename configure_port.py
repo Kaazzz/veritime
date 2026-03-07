@@ -1,9 +1,14 @@
 """
 configure_port.py — Detects the Arduino COM port and patches app.py.
 Called by start.bat before launching the server.
+
+Usage:
+  python configure_port.py          # one-shot detection (interactive)
+  python configure_port.py --poll   # loop every 5s, auto-select first port found
 """
 import re
 import sys
+import time
 
 try:
     from serial.tools import list_ports
@@ -11,12 +16,21 @@ except ImportError:
     print("ERROR: pyserial is not installed. Run: pip install pyserial")
     sys.exit(1)
 
-APP_FILE = "app.py"
+APP_FILE  = "app.py"
+PORT_CFG  = "port.cfg"
 COM_PATTERN = re.compile(r'^(COM_PORT\s*=\s*)"[^"]*"', re.MULTILINE)
+
+_last_written_port = None
 
 
 def get_ports():
     return list(list_ports.comports())
+
+
+def write_port_cfg(port_name):
+    """Write the detected port to port.cfg so the running server can pick it up."""
+    with open(PORT_CFG, "w", encoding="utf-8") as f:
+        f.write(port_name)
 
 
 def patch_app(port_name):
@@ -32,8 +46,34 @@ def patch_app(port_name):
     with open(APP_FILE, "w", encoding="utf-8") as f:
         f.write(new_content)
 
+    write_port_cfg(port_name)
+
+
+def poll_loop():
+    """Continuously scan for Arduino every 5 seconds. Auto-selects first port found."""
+    global _last_written_port
+    print("  [Arduino poller] Running — scanning every 5 seconds...")
+    while True:
+        ports = get_ports()
+        if ports:
+            selected = ports[0]
+            if selected.device != _last_written_port:
+                print(f"  [Arduino poller] Detected {selected.device} ({selected.description})")
+                patch_app(selected.device)
+                _last_written_port = selected.device
+                print(f"  [Arduino poller] Port updated to {selected.device}")
+        else:
+            if _last_written_port is not None:
+                print("  [Arduino poller] Arduino disconnected.")
+                _last_written_port = None
+        time.sleep(5)
+
 
 def main():
+    if "--poll" in sys.argv:
+        poll_loop()
+        return
+
     ports = get_ports()
 
     if len(ports) == 0:

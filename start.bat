@@ -62,17 +62,21 @@ if errorlevel 1 (
 echo  Packages ready.
 echo.
 
-REM ── Step 5: Detect Arduino COM port ──────────────────────────────────────────
+REM ── Step 5: Detect Arduino COM port (optional — server starts either way) ────
 echo  Detecting Arduino...
 %PYTHON% configure_port.py
 if errorlevel 1 (
     echo.
-    echo  Veritime cannot start without the Arduino.
-    echo  Plug it in and double-click start.bat again.
+    echo  Arduino not detected. Veritime will start anyway.
+    echo  Plug in the Arduino and it will be detected automatically.
     echo.
-    pause
-    exit /b 1
+) else (
+    echo.
 )
+
+REM ── Step 5b: Background Arduino detection loop ────────────────────────────
+echo  Starting Arduino auto-detect in the background...
+start /b "Arduino Poller" %PYTHON% configure_port.py --poll
 echo.
 
 REM ── Step 6: Open browser after a short delay ─────────────────────────────────

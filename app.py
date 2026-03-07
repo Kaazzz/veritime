@@ -19,6 +19,20 @@ COM_PORT   = "COM7"
 BAUD_RATE  = 9600
 DB_PATH    = "school.db"
 UPLOAD_DIR = "static/uploads"
+PORT_CFG   = "port.cfg"
+
+
+def get_active_port():
+    """Return port from port.cfg if available, otherwise fall back to COM_PORT."""
+    if os.path.exists(PORT_CFG):
+        try:
+            with open(PORT_CFG, encoding="utf-8") as f:
+                port = f.read().strip()
+            if port:
+                return port
+        except OSError:
+            pass
+    return COM_PORT
 
 # ── App setup ─────────────────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -34,8 +48,9 @@ def serial_reader():
     global _latest_uid
     while True:
         try:
-            ser = serial.Serial(COM_PORT, BAUD_RATE, timeout=1)
-            print(f"[Serial] Connected to {COM_PORT}")
+            port = get_active_port()
+            ser = serial.Serial(port, BAUD_RATE, timeout=1)
+            print(f"[Serial] Connected to {port}")
             socketio.emit("serial_status", {"connected": True})
             while True:
                 line = ser.readline().decode("utf-8", errors="ignore").strip()
