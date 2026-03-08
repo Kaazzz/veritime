@@ -12,7 +12,7 @@ from database import (
     init_db, get_student_by_uid, log_scan,
     get_all_students, get_all_grades, add_student, update_student, delete_student,
     get_logs, get_today_summary, get_latest_scan, get_student_quarterly_summary,
-    get_conn,
+    get_student_by_id,
 )
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -273,11 +273,7 @@ def api_student_quarterly(student_id):
     if not 2000 <= year <= 2100:
         return jsonify({"error": "Invalid year."}), 400
 
-    with get_conn() as conn:
-        student = conn.execute(
-            "SELECT id, name FROM students WHERE id = ?", (student_id,)
-        ).fetchone()
-    if not student:
+    if not get_student_by_id(student_id):
         return jsonify({"error": "Student not found."}), 404
 
     data = get_student_quarterly_summary(student_id, quarter, year)

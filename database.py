@@ -41,6 +41,12 @@ def get_student_by_uid(uid):
         return dict(row) if row else None
 
 
+def get_student_by_id(student_id):
+    with get_conn() as conn:
+        row = conn.execute("SELECT * FROM students WHERE id = ?", (student_id,)).fetchone()
+        return dict(row) if row else None
+
+
 def log_scan(uid, student_id, status):
     with get_conn() as conn:
         conn.execute(

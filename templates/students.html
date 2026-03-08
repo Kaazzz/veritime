@@ -483,10 +483,11 @@
 
     qEmpty.setAttribute('hidden', '');
     qLogBody.removeAttribute('hidden');
+    const badgeClass = { 'On Time': 'badge--ontime', 'Late': 'badge--late' };
     qLogRows.innerHTML = data.logs.map(log => `
       <tr>
         <td><span class="timestamp">${escapeHtml(log.timestamp)}</span></td>
-        <td><span class="badge ${log.status === 'On Time' ? 'badge--ontime' : 'badge--late'}">${escapeHtml(log.status)}</span></td>
+        <td><span class="badge ${badgeClass[log.status] || ''}">${escapeHtml(log.status)}</span></td>
       </tr>
     `).join('');
   }
