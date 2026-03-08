@@ -4,7 +4,8 @@ import threading
 import time
 from io import StringIO
 
-from flask import Flask, render_template, request, redirect, url_for, jsonify, Response
+from functools import wraps
+from flask import Flask, render_template, request, redirect, url_for, jsonify, Response, session, flash
 from flask_socketio import SocketIO
 import serial
 
@@ -16,6 +17,8 @@ from database import (
 )
 
 # ── Config ────────────────────────────────────────────────────────────────────
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin"
 COM_PORT   = "COM7"
 BAUD_RATE  = 9600
 DB_PATH    = "school.db"
@@ -127,6 +130,36 @@ def serial_reader():
             time.sleep(5)
 
 
+# ── Auth ──────────────────────────────────────────────────────────────────────
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("logged_in"):
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if session.get("logged_in"):
+        return redirect(url_for("index"))
+    error = None
+    if request.method == "POST":
+        if (request.form.get("username") == ADMIN_USERNAME and
+                request.form.get("password") == ADMIN_PASSWORD):
+            session["logged_in"] = True
+            return redirect(url_for("index"))
+        error = "Invalid username or password."
+    return render_template("login.html", error=error)
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
 # ── Routes ────────────────────────────────────────────────────────────────────
 @app.route("/landing")
 def landing():
@@ -134,6 +167,7 @@ def landing():
 
 
 @app.route("/")
+@login_required
 def index():
     summary = get_today_summary()
     latest  = get_latest_scan()
@@ -141,6 +175,7 @@ def index():
 
 
 @app.route("/students")
+@login_required
 def students():
     grade = request.args.get("grade", "")
     all_students = get_all_students(grade)
@@ -160,6 +195,7 @@ def build_full_name():
 
 
 @app.route("/students/add", methods=["POST"])
+@login_required
 def add_student_route():
     data = {
         "rfid_uid": request.form.get("rfid_uid", "").strip(),
@@ -180,6 +216,7 @@ def add_student_route():
 
 
 @app.route("/students/edit/<int:student_id>", methods=["POST"])
+@login_required
 def edit_student_route(student_id):
     data = {
         "rfid_uid": request.form.get("rfid_uid", "").strip(),
@@ -199,12 +236,14 @@ def edit_student_route(student_id):
 
 
 @app.route("/students/delete/<int:student_id>", methods=["POST"])
+@login_required
 def delete_student_route(student_id):
     delete_student(student_id)
     return redirect(url_for("students"))
 
 
 @app.route("/logs")
+@login_required
 def logs():
     date_from = request.args.get("date_from", "")
     date_to   = request.args.get("date_to", "")
@@ -221,6 +260,7 @@ def logs():
 
 
 @app.route("/logs/export")
+@login_required
 def logs_export():
     date_from = request.args.get("date_from", "")
     date_to   = request.args.get("date_to", "")
@@ -247,17 +287,20 @@ def logs_export():
 
 
 @app.route("/api/latest-uid")
+@login_required
 def api_latest_uid():
     with _latest_uid_lock:
         return jsonify({"uid": _latest_uid})
 
 
 @app.route("/api/summary")
+@login_required
 def api_summary():
     return jsonify(get_today_summary())
 
 
 @app.route("/api/student/<int:student_id>/quarterly")
+@login_required
 def api_student_quarterly(student_id):
     quarter = request.args.get("quarter", "").upper()
     year_str = request.args.get("year", "")

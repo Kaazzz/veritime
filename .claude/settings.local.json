@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(venv/Scripts/python:*)",
+      "Bash(python:*)",
+      "Bash(git:*)",
+      "Bash(python3:*)"
     ]
   }
 }
