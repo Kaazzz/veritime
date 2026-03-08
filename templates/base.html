@@ -24,6 +24,7 @@
         <a href="/"         class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">Dashboard</a>
         <a href="/students" class="nav-link {% if active_page == 'students' %}active{% endif %}">Students</a>
         <a href="/logs"     class="nav-link {% if active_page == 'logs' %}active{% endif %}">Logs</a>
+        <a href="/logout"   class="nav-link" style="color:var(--text-muted,#888)">Sign Out</a>
       </div>
 
       <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobile-menu">
@@ -41,6 +42,7 @@
       <a href="/"         class="mobile-link {% if active_page == 'dashboard' %}active{% endif %}">Dashboard</a>
       <a href="/students" class="mobile-link {% if active_page == 'students' %}active{% endif %}">Students</a>
       <a href="/logs"     class="mobile-link {% if active_page == 'logs' %}active{% endif %}">Logs</a>
+      <a href="/logout"   class="mobile-link">Sign Out</a>
     </div>
   </nav>
 
