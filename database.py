@@ -1,3 +1,4 @@
+import calendar
 import sqlite3
 
 DB_PATH = "school.db"
@@ -166,8 +167,6 @@ def get_student_quarterly_summary(student_id, quarter, year):
     quarter: "Q1" | "Q2" | "Q3" | "Q4"
     year:    int — start year of the school year (e.g. 2025 for SY 2025-2026)
     """
-    import calendar
-
     quarter_ranges = {
         "Q1": (f"{year}-06-01",   f"{year}-08-31"),
         "Q2": (f"{year}-09-01",   f"{year}-11-30"),
