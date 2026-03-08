@@ -734,14 +734,14 @@ input[type="search"].neu-input { cursor: text; }
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .quarter-pill--active,
 .quarter-pill:hover {
-  background: #F5C400;
-  color: #0B0B0B;
-  border-color: #F5C400;
+  background: var(--yellow);
+  color: var(--black);
+  border-color: var(--yellow);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════

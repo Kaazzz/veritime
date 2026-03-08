@@ -451,10 +451,17 @@
     });
   }
 
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
   function showLoading() {
     qLoading.removeAttribute('hidden');
     qLogBody.setAttribute('hidden', '');
     qEmpty.setAttribute('hidden', '');
+    qEmpty.textContent = 'No scan logs found for this quarter.';
     qTotal.textContent = '—';
     qOntime.textContent = '—';
     qLate.textContent = '—';
@@ -478,8 +485,8 @@
     qLogBody.removeAttribute('hidden');
     qLogRows.innerHTML = data.logs.map(log => `
       <tr>
-        <td><span class="timestamp">${log.timestamp}</span></td>
-        <td><span class="badge ${log.status === 'On Time' ? 'badge--ontime' : 'badge--late'}">${log.status}</span></td>
+        <td><span class="timestamp">${escapeHtml(log.timestamp)}</span></td>
+        <td><span class="badge ${log.status === 'On Time' ? 'badge--ontime' : 'badge--late'}">${escapeHtml(log.status)}</span></td>
       </tr>
     `).join('');
   }
@@ -491,8 +498,8 @@
       .then(renderData)
       .catch(() => {
         qLoading.setAttribute('hidden', '');
-        qEmpty.removeAttribute('hidden');
         qEmpty.textContent = 'Error loading data.';
+        qEmpty.removeAttribute('hidden');
       });
   }
 
