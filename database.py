@@ -157,3 +157,55 @@ def get_today_summary():
             WHERE DATE(timestamp) = DATE('now')
         """).fetchone()
         return dict(row) if row else {"total": 0, "on_time": 0, "late": 0, "unknown": 0}
+
+
+def get_student_quarterly_summary(student_id, quarter, year):
+    """
+    Return attendance counts and log list for a student in a PH school-year quarter.
+
+    quarter: "Q1" | "Q2" | "Q3" | "Q4"
+    year:    int — start year of the school year (e.g. 2025 for SY 2025-2026)
+    """
+    import calendar
+
+    quarter_ranges = {
+        "Q1": (f"{year}-06-01",   f"{year}-08-31"),
+        "Q2": (f"{year}-09-01",   f"{year}-11-30"),
+        "Q3": (f"{year}-12-01",   f"{year+1}-02-{calendar.monthrange(year+1, 2)[1]:02d}"),
+        "Q4": (f"{year+1}-03-01", f"{year+1}-05-31"),
+    }
+
+    if quarter not in quarter_ranges:
+        raise ValueError(f"Invalid quarter: {quarter}")
+
+    date_from, date_to = quarter_ranges[quarter]
+
+    with get_conn() as conn:
+        row = conn.execute("""
+            SELECT
+                COUNT(*) AS total,
+                SUM(CASE WHEN status = 'On Time' THEN 1 ELSE 0 END) AS on_time,
+                SUM(CASE WHEN status = 'Late'    THEN 1 ELSE 0 END) AS late
+            FROM scan_logs
+            WHERE student_id = ?
+              AND DATE(timestamp) >= ?
+              AND DATE(timestamp) <= ?
+        """, (student_id, date_from, date_to)).fetchone()
+
+        logs = conn.execute("""
+            SELECT timestamp, status
+            FROM scan_logs
+            WHERE student_id = ?
+              AND DATE(timestamp) >= ?
+              AND DATE(timestamp) <= ?
+            ORDER BY timestamp DESC
+        """, (student_id, date_from, date_to)).fetchall()
+
+    return {
+        "on_time":   row["on_time"] or 0,
+        "late":      row["late"]    or 0,
+        "total":     row["total"]   or 0,
+        "date_from": date_from,
+        "date_to":   date_to,
+        "logs":      [{"timestamp": r["timestamp"], "status": r["status"]} for r in logs],
+    }
