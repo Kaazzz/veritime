@@ -207,20 +207,11 @@
       </button>
     </div>
 
-    <!-- Quarter + Year selectors -->
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-      <div class="quarter-pills" role="group" aria-label="Select quarter">
-        <button class="quarter-pill" data-q="Q1">Q1</button>
-        <button class="quarter-pill" data-q="Q2">Q2</button>
-        <button class="quarter-pill" data-q="Q3">Q3</button>
-        <button class="quarter-pill" data-q="Q4">Q4</button>
-      </div>
-      <label for="q-year-select" class="form-label" style="margin:0">SY</label>
-      <select id="q-year-select" class="neu-input" style="width:auto;padding:6px 10px"></select>
+    <!-- Date from filter -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <label for="q-date-from" class="form-label" style="margin:0;white-space:nowrap">Show logs from</label>
+      <input type="date" id="q-date-from" class="neu-input" style="width:auto;padding:6px 10px" />
     </div>
-
-    <!-- Date range label -->
-    <p id="q-date-range" style="font-size:0.78rem;color:var(--text-muted,#888);margin-bottom:14px"></p>
 
     <!-- Stats -->
     <div id="q-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px">
@@ -403,12 +394,12 @@
   });
 </script>
 <script>
-  // ── Quarterly Summary Modal ───────────────────────────────────────────────
+  // ── Student Logs Modal ────────────────────────────────────────────────────
   const qOverlay   = document.getElementById('quarterly-overlay');
   const qClose     = document.getElementById('quarterly-modal-close');
   const qAvatar    = document.getElementById('q-avatar');
   const qTitle     = document.getElementById('quarterly-modal-title');
-  const qDateRange = document.getElementById('q-date-range');
+  const qDateFrom  = document.getElementById('q-date-from');
   const qTotal     = document.getElementById('q-total');
   const qOntime    = document.getElementById('q-ontime');
   const qLate      = document.getElementById('q-late');
@@ -416,40 +407,8 @@
   const qEmpty     = document.getElementById('q-empty');
   const qLoading   = document.getElementById('q-loading');
   const qLogBody   = document.getElementById('q-log-body');
-  const qYearSel   = document.getElementById('q-year-select');
 
   let activeStudentId = null;
-  let activeQuarter   = null;
-  let activeYear      = null;
-
-  function currentSchoolYear() {
-    const now = new Date();
-    return now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
-  }
-
-  function defaultQuarter() {
-    const m = new Date().getMonth() + 1;
-    if (m >= 6 && m <= 8)  return "Q1";
-    if (m >= 9 && m <= 11) return "Q2";
-    if (m === 12 || m <= 2) return "Q3";
-    return "Q4";
-  }
-
-  (function buildYearOptions() {
-    const sy = currentSchoolYear();
-    for (let y = sy; y >= sy - 2; y--) {
-      const opt = document.createElement('option');
-      opt.value = y;
-      opt.textContent = `${y}–${y + 1}`;
-      qYearSel.appendChild(opt);
-    }
-  })();
-
-  function setActiveQuarterPill(q) {
-    document.querySelectorAll('.quarter-pill').forEach(pill => {
-      pill.classList.toggle('quarter-pill--active', pill.dataset.q === q);
-    });
-  }
 
   function escapeHtml(str) {
     return String(str)
@@ -461,18 +420,16 @@
     qLoading.removeAttribute('hidden');
     qLogBody.setAttribute('hidden', '');
     qEmpty.setAttribute('hidden', '');
-    qEmpty.textContent = 'No scan logs found for this quarter.';
+    qEmpty.textContent = 'No scan logs found from this date.';
     qTotal.textContent = '—';
     qOntime.textContent = '—';
     qLate.textContent = '—';
-    qDateRange.textContent = '';
   }
 
   function renderData(data) {
     qTotal.textContent  = data.total;
     qOntime.textContent = data.on_time;
     qLate.textContent   = data.late;
-    qDateRange.textContent = `${data.date_from} — ${data.date_to}`;
     qLoading.setAttribute('hidden', '');
 
     if (data.logs.length === 0) {
@@ -492,9 +449,10 @@
     `).join('');
   }
 
-  function fetchQuarterly() {
+  function fetchLogs() {
+    if (!qDateFrom.value) return;
     showLoading();
-    fetch(`/api/student/${activeStudentId}/quarterly?quarter=${activeQuarter}&year=${activeYear}`)
+    fetch(`/api/student/${activeStudentId}/logs?date_from=${qDateFrom.value}`)
       .then(r => r.json())
       .then(renderData)
       .catch(() => {
@@ -506,31 +464,21 @@
 
   function openQuarterlyModal(studentId, studentName) {
     activeStudentId = studentId;
-    activeQuarter   = defaultQuarter();
-    activeYear      = parseInt(qYearSel.value);
     qTitle.textContent = studentName;
     qAvatar.textContent = studentName.charAt(0).toUpperCase();
-    setActiveQuarterPill(activeQuarter);
+    // Default to start of current school year (June 1)
+    const now = new Date();
+    const syStart = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+    qDateFrom.value = `${syStart}-06-01`;
     qOverlay.removeAttribute('hidden');
-    fetchQuarterly();
+    fetchLogs();
   }
 
   function closeQuarterlyModal() {
     qOverlay.setAttribute('hidden', '');
   }
 
-  document.querySelectorAll('.quarter-pill').forEach(pill => {
-    pill.addEventListener('click', () => {
-      activeQuarter = pill.dataset.q;
-      setActiveQuarterPill(activeQuarter);
-      fetchQuarterly();
-    });
-  });
-
-  qYearSel.addEventListener('change', () => {
-    activeYear = parseInt(qYearSel.value);
-    fetchQuarterly();
-  });
+  qDateFrom.addEventListener('change', fetchLogs);
 
   document.querySelectorAll('.quarterly-btn').forEach(btn => {
     btn.addEventListener('click', () => {

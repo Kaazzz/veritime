@@ -12,7 +12,7 @@ import serial
 from database import (
     init_db, get_student_by_uid, log_scan,
     get_all_students, get_all_grades, add_student, update_student, delete_student,
-    get_logs, get_today_summary, get_latest_scan, get_student_quarterly_summary,
+    get_logs, get_today_summary, get_latest_scan, get_student_logs_from,
     get_student_by_id,
 )
 
@@ -299,27 +299,22 @@ def api_summary():
     return jsonify(get_today_summary())
 
 
-@app.route("/api/student/<int:student_id>/quarterly")
+@app.route("/api/student/<int:student_id>/logs")
 @login_required
-def api_student_quarterly(student_id):
-    quarter = request.args.get("quarter", "").upper()
-    year_str = request.args.get("year", "")
+def api_student_logs(student_id):
+    date_from = request.args.get("date_from", "")
 
-    if quarter not in ("Q1", "Q2", "Q3", "Q4"):
-        return jsonify({"error": "Invalid quarter. Use Q1–Q4."}), 400
+    if not date_from:
+        return jsonify({"error": "date_from is required (YYYY-MM-DD)."}), 400
 
-    try:
-        year = int(year_str)
-    except (ValueError, TypeError):
-        return jsonify({"error": "Invalid year."}), 400
-
-    if not 2000 <= year <= 2100:
-        return jsonify({"error": "Invalid year."}), 400
+    import re
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", date_from):
+        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD."}), 400
 
     if not get_student_by_id(student_id):
         return jsonify({"error": "Student not found."}), 404
 
-    data = get_student_quarterly_summary(student_id, quarter, year)
+    data = get_student_logs_from(student_id, date_from)
     return jsonify(data)
 
 
