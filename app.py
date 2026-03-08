@@ -12,6 +12,7 @@ from database import (
     init_db, get_student_by_uid, log_scan,
     get_all_students, get_all_grades, add_student, update_student, delete_student,
     get_logs, get_today_summary, get_latest_scan, get_student_quarterly_summary,
+    get_conn,
 )
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -269,7 +270,9 @@ def api_student_quarterly(student_id):
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid year."}), 400
 
-    from database import get_conn
+    if not 2000 <= year <= 2100:
+        return jsonify({"error": "Invalid year."}), 400
+
     with get_conn() as conn:
         student = conn.execute(
             "SELECT id, name FROM students WHERE id = ?", (student_id,)
