@@ -719,6 +719,31 @@ input[type="search"].neu-input { cursor: text; }
   color: var(--black);
 }
 
+/* ── Quarter pills ─────────────────────────────────────────────────────── */
+.quarter-pills {
+  display: flex;
+  gap: 6px;
+}
+
+.quarter-pill {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border, #2a2a2a);
+  background: var(--surface, #141414);
+  color: var(--text-muted, #888);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.quarter-pill--active,
+.quarter-pill:hover {
+  background: #F5C400;
+  color: #0B0B0B;
+  border-color: #F5C400;
+}
+
 /* ══════════════════════════════════════════════════════════════════════════════
    FILTER CARD
 ══════════════════════════════════════════════════════════════════════════════ */
