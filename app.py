@@ -303,18 +303,19 @@ def api_summary():
 @login_required
 def api_student_logs(student_id):
     date_from = request.args.get("date_from", "")
-
-    if not date_from:
-        return jsonify({"error": "date_from is required (YYYY-MM-DD)."}), 400
+    date_to   = request.args.get("date_to", "")
 
     import re
-    if not re.match(r"^\d{4}-\d{2}-\d{2}$", date_from):
-        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD."}), 400
+    date_re = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+    if not date_from or not date_re.match(date_from):
+        return jsonify({"error": "date_from is required (YYYY-MM-DD)."}), 400
+    if not date_to or not date_re.match(date_to):
+        return jsonify({"error": "date_to is required (YYYY-MM-DD)."}), 400
 
     if not get_student_by_id(student_id):
         return jsonify({"error": "Student not found."}), 404
 
-    data = get_student_logs_from(student_id, date_from)
+    data = get_student_logs_from(student_id, date_from, date_to)
     return jsonify(data)
 
 

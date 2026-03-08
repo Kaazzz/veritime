@@ -207,10 +207,12 @@
       </button>
     </div>
 
-    <!-- Date from filter -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-      <label for="q-date-from" class="form-label" style="margin:0;white-space:nowrap">Show logs from</label>
+    <!-- Date range filter -->
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+      <label for="q-date-from" class="form-label" style="margin:0;white-space:nowrap">From</label>
       <input type="date" id="q-date-from" class="neu-input" style="width:auto;padding:6px 10px" />
+      <label for="q-date-to" class="form-label" style="margin:0;white-space:nowrap">To</label>
+      <input type="date" id="q-date-to" class="neu-input" style="width:auto;padding:6px 10px" />
     </div>
 
     <!-- Stats -->
@@ -400,6 +402,7 @@
   const qAvatar    = document.getElementById('q-avatar');
   const qTitle     = document.getElementById('quarterly-modal-title');
   const qDateFrom  = document.getElementById('q-date-from');
+  const qDateTo    = document.getElementById('q-date-to');
   const qTotal     = document.getElementById('q-total');
   const qOntime    = document.getElementById('q-ontime');
   const qLate      = document.getElementById('q-late');
@@ -450,9 +453,9 @@
   }
 
   function fetchLogs() {
-    if (!qDateFrom.value) return;
+    if (!qDateFrom.value || !qDateTo.value) return;
     showLoading();
-    fetch(`/api/student/${activeStudentId}/logs?date_from=${qDateFrom.value}`)
+    fetch(`/api/student/${activeStudentId}/logs?date_from=${qDateFrom.value}&date_to=${qDateTo.value}`)
       .then(r => r.json())
       .then(renderData)
       .catch(() => {
@@ -466,10 +469,11 @@
     activeStudentId = studentId;
     qTitle.textContent = studentName;
     qAvatar.textContent = studentName.charAt(0).toUpperCase();
-    // Default to start of current school year (June 1)
+    // Default: from June 1 of current school year to today
     const now = new Date();
     const syStart = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
     qDateFrom.value = `${syStart}-06-01`;
+    qDateTo.value   = now.toISOString().slice(0, 10);
     qOverlay.removeAttribute('hidden');
     fetchLogs();
   }
@@ -479,6 +483,7 @@
   }
 
   qDateFrom.addEventListener('change', fetchLogs);
+  qDateTo.addEventListener('change', fetchLogs);
 
   document.querySelectorAll('.quarterly-btn').forEach(btn => {
     btn.addEventListener('click', () => {

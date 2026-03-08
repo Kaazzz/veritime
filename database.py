@@ -166,11 +166,11 @@ def get_today_summary():
         return dict(row) if row else {"total": 0, "on_time": 0, "late": 0, "unknown": 0}
 
 
-def get_student_logs_from(student_id, date_from):
+def get_student_logs_from(student_id, date_from, date_to):
     """
-    Return attendance counts and log list for a student from date_from up to today.
+    Return attendance counts and log list for a student between date_from and date_to.
 
-    date_from: ISO date string "YYYY-MM-DD"
+    date_from, date_to: ISO date strings "YYYY-MM-DD"
     """
     with get_conn() as conn:
         row = conn.execute("""
@@ -181,20 +181,23 @@ def get_student_logs_from(student_id, date_from):
             FROM scan_logs
             WHERE student_id = ?
               AND DATE(timestamp) >= ?
-        """, (student_id, date_from)).fetchone()
+              AND DATE(timestamp) <= ?
+        """, (student_id, date_from, date_to)).fetchone()
 
         logs = conn.execute("""
             SELECT timestamp, status
             FROM scan_logs
             WHERE student_id = ?
               AND DATE(timestamp) >= ?
+              AND DATE(timestamp) <= ?
             ORDER BY timestamp DESC
-        """, (student_id, date_from)).fetchall()
+        """, (student_id, date_from, date_to)).fetchall()
 
     return {
         "on_time":   row["on_time"] or 0,
         "late":      row["late"]    or 0,
         "total":     row["total"]   or 0,
         "date_from": date_from,
+        "date_to":   date_to,
         "logs":      [{"timestamp": r["timestamp"], "status": r["status"]} for r in logs],
     }
