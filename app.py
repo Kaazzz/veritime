@@ -11,7 +11,7 @@ import serial
 from database import (
     init_db, get_student_by_uid, log_scan,
     get_all_students, get_all_grades, add_student, update_student, delete_student,
-    get_logs, get_today_summary, get_latest_scan,
+    get_logs, get_today_summary, get_latest_scan, get_student_quarterly_summary,
 )
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -254,6 +254,31 @@ def api_latest_uid():
 @app.route("/api/summary")
 def api_summary():
     return jsonify(get_today_summary())
+
+
+@app.route("/api/student/<int:student_id>/quarterly")
+def api_student_quarterly(student_id):
+    quarter = request.args.get("quarter", "").upper()
+    year_str = request.args.get("year", "")
+
+    if quarter not in ("Q1", "Q2", "Q3", "Q4"):
+        return jsonify({"error": "Invalid quarter. Use Q1–Q4."}), 400
+
+    try:
+        year = int(year_str)
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid year."}), 400
+
+    from database import get_conn
+    with get_conn() as conn:
+        student = conn.execute(
+            "SELECT id, name FROM students WHERE id = ?", (student_id,)
+        ).fetchone()
+    if not student:
+        return jsonify({"error": "Student not found."}), 404
+
+    data = get_student_quarterly_summary(student_id, quarter, year)
+    return jsonify(data)
 
 
 # ── Startup ───────────────────────────────────────────────────────────────────
