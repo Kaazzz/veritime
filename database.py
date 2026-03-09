@@ -1,4 +1,3 @@
-import calendar
 import sqlite3
 
 DB_PATH = "school.db"
