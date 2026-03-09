@@ -1,4 +1,5 @@
 import os
+import re
 import csv
 import threading
 import time
@@ -305,7 +306,6 @@ def api_student_logs(student_id):
     date_from = request.args.get("date_from", "")
     date_to   = request.args.get("date_to", "")
 
-    import re
     date_re = re.compile(r"^\d{4}-\d{2}-\d{2}$")
     if not date_from or not date_re.match(date_from):
         return jsonify({"error": "date_from is required (YYYY-MM-DD)."}), 400
