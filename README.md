@@ -155,6 +155,7 @@ Each student has:
 | `GET` | `/logs/export` | Download logs as CSV |
 | `GET` | `/api/latest-uid` | Get the most recently scanned UID (JSON) |
 | `GET` | `/api/summary` | Get today's scan summary (JSON) |
+| `GET` | `/api/student-logs` | Get filtered scan logs for a student (JSON) |
 
 ---
 
