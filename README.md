@@ -1,6 +1,6 @@
 # Veritime
 
-A real-time RFID-based school attendance system. Students tap their RFID cards on an Arduino reader; the web dashboard updates instantly and logs every scan to a local database.
+A real-time RFID-based school attendance system. Students tap their RFID cards on an Arduino reader; the web dashboard updates instantly and logs every scan to a local SQLite database.
 
 ---
 
