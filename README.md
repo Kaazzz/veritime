@@ -59,7 +59,13 @@ pip install -r requirements.txt
 
 ### 4. Configure the serial port
 
-Open `app.py` and set the correct COM port for your Arduino:
+Run the configuration utility to set your COM port interactively:
+
+```bash
+python configure_port.py
+```
+
+Or manually open `app.py` and set the correct COM port for your Arduino:
 
 ```python
 COM_PORT = "COM7"   # change to match your system (e.g. COM3, COM5)
