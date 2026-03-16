@@ -84,6 +84,7 @@ Open your browser at `http://localhost:5000`.
 veritime/
 ├── app.py              # Flask app, serial reader thread, routes
 ├── database.py         # SQLite helpers (init, queries, CRUD)
+├── configure_port.py   # Interactive COM port configuration utility
 ├── requirements.txt    # Python dependencies
 ├── school.db           # SQLite database (auto-created on first run)
 ├── static/
