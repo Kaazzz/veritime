@@ -32,6 +32,7 @@ A real-time RFID-based school attendance system. Students tap their RFID cards o
 - Python 3.9+
 - Arduino with RFID reader connected via USB serial
 - Windows (tested on Windows 11); other platforms require changing `COM_PORT` in `app.py`
+- Recommended browser: Chrome or Edge (latest) for best WebSocket compatibility
 
 ---
 
