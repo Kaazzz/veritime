@@ -163,3 +163,14 @@ Each student has:
 - The database and uploads folder are excluded from version control via `.gitignore`
 - Flask runs with `use_reloader=False` to prevent the serial port from being opened twice in debug mode
 - If the Arduino is disconnected, the serial reader thread retries automatically every 5 seconds
+
+---
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `SerialException: could not open port` | Check the COM port in `port.cfg` or `app.py`; ensure no other app has the port open |
+| Dashboard shows no scans | Confirm Arduino serial output matches the expected format (see **Arduino Serial Format**) |
+| Photos not displaying | Ensure `static/uploads/` exists and Flask has write permission |
+| `ModuleNotFoundError` | Run `pip install -r requirements.txt` inside the activated virtual environment |
